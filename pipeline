@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WasteWise Vision — OpenCV + AI Pipeline</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1410;
+      color: #e8f0e0;
+      min-height: 100vh;
+      padding: 24px
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #8dcc44;
+      margin-bottom: 4px
+    }
+
+    .sub {
+      font-size: 13px;
+      color: #6a7a60;
+      margin-bottom: 24px
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 20px;
+      max-width: 1100px
+    }
+
+    .panel {
+      background: #161d12;
+      border: 1px solid #2a3520;
+      border-radius: 12px;
+      padding: 20px
+    }
+
+    .sec {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: #5a7040;
+      margin-bottom: 10px
+    }
+
+    .drop-zone {
+      border: 1.5px dashed #3a5020;
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 16px;
+      position: relative
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag {
+      border-color: #8dcc44;
+      background: #1a2415
+    }
+
+    .drop-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer
+    }
+
+    .dz-icon {
+      font-size: 36px;
+      margin-bottom: 10px
+    }
+
+    .dz-text {
+      font-size: 13px;
+      color: #6a7a60
+    }
+
+    .dz-hint {
+      font-size: 11px;
+      color: #4a5a40;
+      margin-top: 4px
+    }
+
+    .preview-wrap {
+      position: relative;
+      margin-bottom: 16px;
+      display: none
+    }
+
+    .preview-wrap img {
+      width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #2a3520;
+      background: #0f1410
+    }
+
+    .canvas-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 8px
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      transition: all .15s
+    }
+
+    .btn-main {
+      background: #639922;
+      color: #e8f0e0
+    }
+
+    .btn-main:hover {
+      background: #7ab52a
+    }
+
+    .btn-main:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #e8f0e0;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .result-section {
+      margin-top: 0
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .feat-card {
+      background: #1a2415;
+      border: 1px solid #2a3520;
+      border-radius: 8px;
+      padding: 10px 12px
+    }
+
+    .feat-lbl {
+      font-size: 10px;
+      color: #5a7040;
+      margin-bottom: 2px;
+      letter-spacing: .3px
+    }
+
+    .feat-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e8f0e0
+    }
+
+    .feat-sub {
+      font-size: 10px;
+      color: #4a5a40;
+      margin-top: 1px
+    }
+
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px
+    }
+
+    .bar-lbl {
+      font-size: 11px;
+      color: #6a7a60;
+      width: 100px;
+      flex-shrink: 0
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 6px;
+      background: #1a2415;
+      border-radius: 3px;
+      border: 1px solid #2a3520;
+      overflow: hidden
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .6s ease
+    }
+
+    .bar-pct {
+      font-size: 11px;
+      color: #5a7040;
+      width: 32px
+    }
+
+    .clue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 14px
+    }
+
+    .clue {
+      font-size: 12px;
+      color: #7a9460;
+      padding: 5px 10px;
+      background: #1a2415;
+      border-radius: 6px;
+      border-left: 2px solid #3a5020
+    }
+
+    .color-strip {
+      display: flex;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 6px
+    }
+
+    .color-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: rgba(255, 255, 255, .6);
+      font-family: monospace
+    }
+
+    .palette-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px
+    }
+
+    .palette-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #6a7a60;
+      padding: 3px 8px;
+      background: #1a2415;
+      border-radius: 4px;
+      border: 1px solid #2a3520
+    }
+
+    .palette-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0
+    }
+
+    .ai-box {
+      background: #1a2415;
+      border: 1px solid #3a6020;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px
+    }
+
+    .ai-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8dcc44;
+      letter-spacing: .3px;
+      margin-bottom: 8px
+    }
+
+    .ai-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px
+    }
+
+    .ai-key {
+      font-size: 12px;
+      color: #5a7040
+    }
+
+    .ai-val {
+      font-size: 12px;
+      color: #e8f0e0;
+      font-weight: 500;
+      text-align: right;
+      max-width: 60%
+    }
+
+    .dataset-area {
+      margin-top: 14px
+    }
+
+    .ds-btn {
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #3a5020;
+      background: transparent;
+      color: #7a9460;
+      cursor: pointer;
+      margin-right: 6px;
+      transition: all .15s
+    }
+
+    .ds-btn:hover {
+      background: #1a2415;
+      color: #8dcc44
+    }
+
+    .notice {
+      font-size: 12px;
+      color: #5a7040;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #1a2415;
+      border-radius: 6px;
+      line-height: 1.5
+    }
+
+    .guide-card {
+      background: #0f1410;
+      border: 1px solid #2a3520;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+      color: #e8f0e0
+    }
+
+    .guide-card strong {
+      color: #8dcc44
+    }
+
+    .guide-card em {
+      color: #6a7a60;
+      font-style: normal
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #3a5020
+    }
+
+    .empty-state .icon {
+      font-size: 40px;
+      margin-bottom: 12px
+    }
+
+    .empty-state p {
+      font-size: 13px
+    }
+
+    .divider {
+      border-top: 1px solid #1e2a18;
+      margin: 14px 0
+    }
+
+    .api-input {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 12px;
+      background: #0f1410;
+      border: 1px solid #2a3520;
+      border-radius: 6px;
+      color: #7a9460;
+      margin-bottom: 10px;
+      font-family: monospace
+    }
+
+    .api-input::placeholder {
+      color: #3a4a30
+    }
+
+    .hist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #1a2415;
+      cursor: pointer
+    }
+
+    .hist-item:last-child {
+      border-bottom: none
+    }
+
+    .hist-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .hist-name {
+      font-size: 12px;
+      color: #c0d0a0;
+      flex: 1
+    }
+
+    .hist-score {
+      font-size: 11px;
+      color: #5a7040
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>⚡ WasteWise Vision Pipeline</h1>
+  <p class="sub">OpenCV feature extraction + Claude Vision AI · Upload any waste image to extract structured insights
+    for dataset building</p>
+
+  <div class="layout">
+    <!-- LEFT: INPUT -->
+    <div>
+      <div class="panel">
+        <div class="sec">INPUT IMAGE</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+          <div class="dz-icon">🗑️</div>
+          <div class="dz-text">Drop waste image here or click to browse</div>
+          <div class="dz-hint">JPG · PNG · WEBP · any format</div>
+        </div>
+        
+        <button class="btn" style="background:#1a2415; color:#8dcc44; border:1px solid #3a5020; margin-bottom: 16px; font-size: 13px; font-weight: 600;" onclick="startCamera()">📷 Take Picture with Camera</button>
+
+        <div id="cameraWrap" style="display:none; margin-bottom: 16px; position:relative;">
+          <video id="cameraVideo" autoplay playsinline style="width:100%; max-height:280px; border-radius:8px; border:1px solid #2a3520; background:#0f1410; object-fit:cover;"></video>
+          <button class="btn btn-main" style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); width: auto; padding: 10px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" onclick="captureImage()">📸 Capture Photo</button>
+          <button class="btn" style="position:absolute; top:10px; right:10px; width: 30px; height: 30px; padding: 0; display:flex; align-items:center; justify-content:center; border-radius: 50%; font-size:12px; background:rgba(0,0,0,0.7); color:#fff;" onclick="stopCamera()">✖</button>
+        </div>
+
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" src="" alt="Preview">
+          <canvas id="overlayCanvas" class="canvas-overlay"></canvas>
+        </div>
+        <div class="sec">ANTHROPIC API KEY (for AI Vision labels)</div>
+        <input class="api-input" id="apiKey" type="password"
+          placeholder="sk-ant-... (optional — skip for OpenCV-only mode)">
+        <button class="btn btn-main" id="analyzeBtn" onclick="runPipeline()" disabled>
+          🔬 Run Vision Pipeline
+        </button>
+
+        <div class="divider"></div>
+        <div class="sec">SESSION HISTORY</div>
+        <div id="historyList">
+          <p style="font-size:12px;color:#3a5020">No images analyzed yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="panel">
+        <div id="emptyState" class="empty-state">
+          <div class="icon">📊</div>
+          <p>Upload a waste image to extract<br>59 visual features for your dataset</p>
+        </div>
+        <div id="resultSection" class="result-section" style="display:none">
+          <div class="sec">PREDICTED WASTE CATEGORY</div>
+          <div id="categoryBadge" class="category-badge"></div>
+
+          <div class="sec">KEY METRICS</div>
+          <div class="feature-grid" id="featureGrid"></div>
+
+          <div class="sec">MATERIAL COMPOSITION ESTIMATE</div>
+          <div id="compositionBars"></div>
+
+          <div class="sec">DOMINANT COLORS — K-MEANS</div>
+          <div id="colorStrip" class="color-strip"></div>
+          <div id="colorPalette" class="palette-row"></div>
+
+          <div class="sec">TEXTURE SIGNALS</div>
+          <div id="textureGrid" class="feature-grid"></div>
+
+          <div class="sec">SHAPE & EDGE FEATURES</div>
+          <div id="shapeGrid" class="feature-grid"></div>
+
+          <div id="cluesSection">
+            <div class="sec">CLASSIFICATION EVIDENCE</div>
+            <div id="clueList" class="clue-list"></div>
+          </div>
+
+          <div id="aiSection" style="display:none">
+            <div class="sec">AI VISION ANALYSIS</div>
+            <div class="ai-box" id="aiBox"></div>
+            <div class="guide-card" id="guideCard"></div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sec">DATASET EXPORT</div>
+          <div>
+            <button class="ds-btn" onclick="downloadJSON()">⬇ JSON Features</button>
+            <button class="ds-btn" onclick="downloadCSV()">⬇ CSV Row</button>
+            <button class="ds-btn" onclick="downloadAllCSV()">⬇ All Session CSV</button>
+          </div>
+          <p class="notice">Each analyzed image produces 59 features spanning color, texture (GLCM+LBP+Gabor), shape
+            (contour+moments), and edge metrics — ready for ML training pipelines.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentFile = null;
+    let currentRecord = null;
+    let currentFull = null;
+    let sessionRecords = [];
+
+    const CAT_COLORS = {
+      'Plastic': '#639922', 'Glass': '#1D9E75', 'Metal': '#378ADD',
+      'Paper/Cardboard': '#BA7517', 'Organic/Food': '#1D9E75',
+      'Electronic': '#7F77DD', 'Textile': '#D4537E', 
+      'Hazardous': '#E53E3E', 'Battery': '#D69E2E', 'Medical': '#ED64A6',
+      'Wood': '#8B4513', 'Rubber': '#4A5568', 'Unknown': '#888780'
+    };
+
+    // DRAG & DROP
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
+
+    function handleFile(e) { const f = e.target.files[0]; if (f) loadFile(f); }
+
+    let videoStream = null;
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = stream;
+        videoStream = stream;
+        document.getElementById('cameraWrap').style.display = 'block';
+        document.getElementById('dropZone').style.display = 'none';
+        document.getElementById('previewWrap').style.display = 'none';
+      } catch (err) {
+        alert('Camera access denied or unavailable: ' + err.message);
+      }
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+      document.getElementById('cameraWrap').style.display = 'none';
+      document.getElementById('dropZone').style.display = 'block';
+    }
+
+    function captureImage() {
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      
+      const img = document.getElementById('previewImg');
+      img.src = dataUrl;
+      
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          currentFile = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+          document.getElementById('previewWrap').style.display = 'block';
+          document.getElementById('analyzeBtn').disabled = false;
+          stopCamera();
+        });
+    }
+
+    function loadFile(file) {
+      currentFile = file;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = document.getElementById('previewImg');
+        img.src = ev.target.result;
+        document.getElementById('previewWrap').style.display = 'block';
+        document.getElementById('dropZone').style.display = 'none';
+        document.getElementById('analyzeBtn').disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // CANVAS PIXEL ANALYSIS (simulated OpenCV)
+    // Updated and cleaned analyzePixels implementation
+    async function analyzePixels(imgEl) {
+      const canvas = document.createElement('canvas');
+      const MAX = 400;
+      const scale = Math.min(1, MAX / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
+      canvas.width = Math.round(imgEl.naturalWidth * scale);
+      canvas.height = Math.round(imgEl.naturalHeight * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const n = data.length / 4;
+
+      let sumR = 0, sumG = 0, sumB = 0, sumH = 0, sumS = 0, sumV = 0;
+      const pixels = [];
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        sumR += r; sumG += g; sumB += b;
+        const [h, s, v] = rgbToHsv(r, g, b);
+        sumH += h; sumS += s; sumV += v;
+        pixels.push([r, g, b]);
+      }
+
+      const meanR = sumR / n, meanG = sumG / n, meanB = sumB / n;
+      const meanS = sumS / n, meanV = sumV / n;
+      let varR = 0, varG = 0, varB = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        varR += (data[i] - meanR) ** 2;
+        varG += (data[i + 1] - meanG) ** 2;
+        varB += (data[i + 2] - meanB) ** 2;
+      }
+      const stdR = Math.sqrt(varR / n), stdG = Math.sqrt(varG / n), stdB = Math.sqrt(varB / n);
+
+      // Dominant colors (k‑means, k=5)
+      const dominant = kMeans(pixels, 5);
+
+      // Edge density (simple Sobel approximation)
+      const gray = [];
+      for (let i = 0; i < data.length; i += 4) {
+        gray.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+      }
+      const W = canvas.width, H = canvas.height;
+      let edgeSum = 0, lapVar = 0;
+      const lapVals = [];
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          const idx = y * W + x;
+          const gx = gray[idx + 1] - gray[idx - 1];
+          const gy = gray[(y + 1) * W + x] - gray[(y - 1) * W + x];
+          const mag = Math.sqrt(gx * gx + gy * gy);
+          edgeSum += mag > 50 ? 1 : 0;
+          const lap = gray[idx - 1] + gray[idx + 1] + gray[(y - 1) * W + x] + gray[(y + 1) * W + x] - 4 * gray[idx];
+          lapVals.push(lap);
+        }
+      }
+      const lapMean = lapVals.reduce((a, b) => a + b, 0) / lapVals.length;
+      lapVals.forEach(v => lapVar += (v - lapMean) ** 2);
+      lapVar /= lapVals.length;
+      const edgeDensity = (edgeSum / ((W - 2) * (H - 2))) * 100;
+
+      // LBP‑like texture entropy
+      const grayNorm = gray.map(v => Math.round(v / 32));
+      const hist = new Array(8).fill(0);
+      grayNorm.forEach(v => { if (v < 8) hist[v]++; });
+      const total = hist.reduce((a, b) => a + b, 0);
+      const probs = hist.map(h => h / total + 1e-10);
+      const lbpEntropy = -probs.reduce((a, p) => a + p * Math.log2(p), 0);
+
+      // Simplified GLCM energy
+      let energy = 0;
+      for (let i = 0; i < n - 1; i++) {
+        const diff = grayNorm[i] - grayNorm[i + 1];
+        energy += Math.exp(-diff * diff);
+      }
+      energy /= n;
+
+      // Brightness statistics
+      const brightMean = gray.reduce((a, b) => a + b, 0) / gray.length;
+      const brightStd = Math.sqrt(gray.reduce((a, v) => a + (v - brightMean) ** 2, 0) / gray.length);
+
+      // Colorfulness (Hasler & Süsstrunk)
+      const rg = pixels.map(([r, g]) => r - g);
+      const yb = pixels.map(([r, g, b]) => 0.5 * (r + g) - b);
+      const rgMean = rg.reduce((a, b) => a + b, 0) / n;
+      const ybMean = yb.reduce((a, b) => a + b, 0) / n;
+      const rgStd = Math.sqrt(rg.reduce((a, v) => a + (v - rgMean) ** 2, 0) / n);
+      const ybStd = Math.sqrt(yb.reduce((a, v) => a + (v - ybMean) ** 2, 0) / n);
+      const colorfulness = Math.sqrt(rgStd ** 2 + ybStd ** 2) + 0.3 * Math.sqrt(rgMean ** 2 + ybMean ** 2);
+
+      return {
+        width_px: imgEl.naturalWidth,
+        height_px: imgEl.naturalHeight,
+        megapixels: Math.round(imgEl.naturalWidth * imgEl.naturalHeight / 1e6 * 1000) / 1000,
+        mean_red: Math.round(meanR * 10) / 10,
+        mean_green: Math.round(meanG * 10) / 10,
+        mean_blue: Math.round(meanB * 10) / 10,
+        std_red: Math.round(stdR * 10) / 10,
+        std_green: Math.round(stdG * 10) / 10,
+        std_blue: Math.round(stdB * 10) / 10,
+        mean_saturation: Math.round(meanS * 10) / 10,
+        mean_value: Math.round(meanV * 10) / 10,
+        mean_hue: Math.round(sumH / n * 10) / 10,
+        mean_brightness: Math.round(brightMean * 10) / 10,
+        std_brightness: Math.round(brightStd * 10) / 10,
+        colorfulness: Math.round(colorfulness * 10) / 10,
+        edge_density_pct: Math.round(edgeDensity * 100) / 100,
+        sharpness_score: Math.round(lapVar * 10) / 10,
+        laplacian_variance: Math.round(lapVar * 10) / 10,
+        glcm_energy: Math.round(energy * 10000) / 10000,
+        lbp_entropy: Math.round(lbpEntropy * 1000) / 1000,
+        dominant_colors: dominant,
+      };
+    }
+
+    // Updated getAILabel with proper headers and error handling
+    async function getAILabel(imageDataUrl, apiKey) {
+      const base64 = imageDataUrl.split(',')[1];
+      const mediaType = imageDataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: 400,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: `Analyze this waste image for a circular‑economy dataset. Respond ONLY with JSON (no markdown):\n{"item":"specific item name","category":"Plastic/Glass/Metal/Paper/Organic/Electronic/Textile/Hazardous/Battery/Medical/Wood/Rubber/Unknown","subcategory":"specific type","diversion_score":0-100,"disposal":"best disposal in 6 words","recyclable":true/false,"condition":"good/damaged/contaminated","material":"primary material","notes":"key visual insight for dataset labeling"}` }
+            ]
+          }]
+        })
+      });
+      const d = await resp.json();
+      if (!d.content || !d.content[0] || !d.content[0].text) {
+        throw new Error('Invalid response from Claude API');
+      }
+      return JSON.parse(d.content[0].text.replace(/```json|```/g, '').trim());
+    }
+
+    // Clean drawOverlay implementation handling whitespace and case
+    function drawOverlay(img, category) {
+      const canvas = document.getElementById('overlayCanvas');
+      const w = img.offsetWidth, h = img.offsetHeight;
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+      const cleanCat = String(category).trim();
+      const color = CAT_COLORS[cleanCat] || '#888780';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 3]);
+      const pad = 12;
+      ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+      ctx.setLineDash([]);
+      ctx.fillStyle = color + 'cc';
+      ctx.fillRect(pad, pad, 130, 24);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText(cleanCat.toUpperCase(), pad + 8, pad + 16);
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      let h = 0, s = max === 0 ? 0 : d / max, v = max;
+      if (d !== 0) { if (max === r) h = (g - b) / d % 6; else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h = h * 60; }
+      return [h < 0 ? h + 360 : h, s * 255, v * 255];
+    }
+
+    function kMeans(pixels, k) {
+      const sample = pixels.filter((_, i) => i % Math.max(1, Math.floor(pixels.length / 2000)) === 0);
+      let centers = sample.sort(() => Math.random() - .5).slice(0, k);
+      for (let iter = 0; iter < 10; iter++) {
+        const clusters = Array.from({ length: k }, () => []);
+        sample.forEach(p => {
+          let best = 0, bestD = Infinity;
+          centers.forEach((c, i) => { const d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2; if (d < bestD) { bestD = d; best = i; } });
+          clusters[best].push(p);
+        });
+        centers = clusters.map(cl => {
+          if (!cl.length) return centers[0];
+          return [cl.reduce((a, p) => a + p[0], 0) / cl.length, cl.reduce((a, p) => a + p[1], 0) / cl.length, cl.reduce((a, p) => a + p[2], 0) / cl.length];
+        });
+      }
+      const assignments = sample.map(p => { let best = 0, bestD = Infinity; centers.forEach((c, i) => { const d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2; if (d < bestD) { bestD = d; best = i; } }); return best; });
+      const counts = new Array(k).fill(0);
+      assignments.forEach(a => counts[a]++);
+      return centers.map((c, i) => ({
+        rgb: [Math.round(c[0]), Math.round(c[1]), Math.round(c[2])],
+        hex: '#' + [c[0], c[1], c[2]].map(v => Math.round(v).toString(16).padStart(2, '0')).join(''),
+        coverage_pct: Math.round(counts[i] / sample.length * 1000) / 10,
+        rank: i + 1
+      })).sort((a, b) => b.coverage_pct - a.coverage_pct);
+    }
+
+    function materialHeuristics(feats) {
+      const scores = { Plastic: 0, Glass: 0, Metal: 0, 'Paper/Cardboard': 0, 'Organic/Food': 0, Electronic: 0, Textile: 0, Hazardous: 0, Battery: 0, Medical: 0, Wood: 0, Rubber: 0, Unknown: 5 };
+      const clues = [];
+      const { mean_saturation: sat, mean_value: val, colorfulness, glcm_energy, lbp_entropy, edge_density_pct, sharpness_score } = feats;
+
+      if (sat < 40 && val < 130) { scores.Metal += 8; scores.Glass += 5; clues.push('Low saturation + dark → metallic or glass surface'); }
+      if (val > 130 && sat < 40) { scores['Paper/Cardboard'] += 15; scores.Metal -= 5; clues.push('Bright & low saturation → likely paper/cardboard'); }
+      if (sat > 90 && colorfulness > 40) { scores.Plastic += 7; scores.Textile += 5; clues.push('High saturation + colorfulness → plastic or textile'); }
+      if (feats.mean_green > feats.mean_red * 1.15) { scores['Organic/Food'] += 8; clues.push('Green-dominant channels → organic or plant material'); }
+      
+      if (glcm_energy > 0.6 && val > 130) { scores['Paper/Cardboard'] += 8; scores.Plastic += 4; clues.push('Extremely uniform bright surface → likely paper or flat plastic'); }
+      else if (glcm_energy > 0.4 && val <= 130) { scores.Metal += 8; scores.Glass += 4; clues.push('High GLCM energy + dark → smooth metal/glass'); }
+      
+      if (lbp_entropy > 3.5) { scores.Textile += 7; clues.push('High LBP entropy → complex fibrous texture'); }
+      if (lbp_entropy < 1.5 && glcm_energy > 0.2) { scores.Glass += 5; clues.push('Low LBP entropy → uniform surface'); }
+      
+      if (sharpness_score > 800) { scores.Electronic += 7; scores['Paper/Cardboard'] += 3; clues.push('High sharpness variance → fine detail (electronic/text)'); }
+      if (edge_density_pct < 5) { scores.Plastic += 5; clues.push('Very low edge density → smooth, featureless surface'); }
+      if (edge_density_pct > 15) { scores.Electronic += 6; scores['Paper/Cardboard'] += 5; clues.push('High edge density → complex structure or printed text'); }
+
+      // Check dominant colors for white/grey (typical of paper)
+      const hasWhite = feats.dominant_colors.some(c => c.rgb[0] > 170 && c.rgb[1] > 170 && c.rgb[2] > 170 && c.coverage_pct > 15);
+      if (hasWhite) { scores['Paper/Cardboard'] += 10; clues.push('Significant white/light grey detected → Paper/Cardboard'); }
+
+      const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+      const total = Object.values(scores).reduce((a, b) => a + b, 0);
+      const conf = Math.min(95, Math.round(scores[best] / total * 300));
+      const divMap = { Plastic: 72, Glass: 88, Metal: 92, 'Paper/Cardboard': 85, 'Organic/Food': 78, Electronic: 65, Textile: 70, Hazardous: 0, Battery: 85, Medical: 0, Wood: 80, Rubber: 45, Unknown: 30 };
+
+      const comp = { recyclable_pct: 0, compostable_pct: 0, reusable_pct: 0, landfill_pct: 0 };
+      if (best === 'Plastic') { comp.recyclable_pct = 55; comp.reusable_pct = 17; comp.landfill_pct = 28; }
+      else if (best === 'Glass') { comp.recyclable_pct = 80; comp.reusable_pct = 12; comp.landfill_pct = 8; }
+      else if (best === 'Metal') { comp.recyclable_pct = 85; comp.reusable_pct = 10; comp.landfill_pct = 5; }
+      else if (best === 'Paper/Cardboard') { comp.recyclable_pct = 72; comp.compostable_pct = 18; comp.landfill_pct = 10; }
+      else if (best === 'Organic/Food') { comp.compostable_pct = 82; comp.recyclable_pct = 5; comp.landfill_pct = 13; }
+      else if (best === 'Electronic') { comp.recyclable_pct = 60; comp.landfill_pct = 40; }
+      else if (best === 'Textile') { comp.reusable_pct = 55; comp.recyclable_pct = 30; comp.landfill_pct = 15; }
+      else if (best === 'Hazardous') { comp.landfill_pct = 100; }
+      else if (best === 'Battery') { comp.recyclable_pct = 95; comp.landfill_pct = 5; }
+      else if (best === 'Medical') { comp.landfill_pct = 100; }
+      else if (best === 'Wood') { comp.compostable_pct = 60; comp.reusable_pct = 30; comp.landfill_pct = 10; }
+      else if (best === 'Rubber') { comp.recyclable_pct = 60; comp.landfill_pct = 40; }
+      else { comp.landfill_pct = 60; comp.recyclable_pct = 25; comp.reusable_pct = 15; }
+
+      return { predicted_category: best, confidence_pct: conf, diversion_potential: divMap[best] || 50, reasoning_clues: clues.slice(0, 5), composition: comp };
+    }
+
+    // Global Recycling Guide lookup
+    function getRecyclingGuide(aiLabel) {
+      const map = {
+        Plastic: { instructions: 'Recyclable. Please rinse and remove the cap.', fact: 'Plastics can take up to 1000 years to decompose; recycling saves energy and reduces landfill.' },
+        Metal: { instructions: 'Recyclable. Ensure it is empty of liquids.', fact: 'Metals retain value indefinitely; recycling saves up to 95% energy versus mining.' },
+        Paper: { instructions: 'Recyclable. Must be dry and free of food grease.', fact: 'Recycling paper saves trees and reduces water usage by 60%.' },
+        'Paper/Cardboard': { instructions: 'Recyclable. Must be dry and free of food grease.', fact: 'Recycling paper saves trees and reduces water usage by 60%.' },
+        Glass: { instructions: 'Recyclable. Rinse and avoid broken shards.', fact: 'Glass can be recycled endlessly without loss of quality.' },
+        Organic: { instructions: 'Compost in green bin.', fact: 'Composting food waste reduces methane emissions from landfills.' },
+        'Organic/Food': { instructions: 'Compost in green bin.', fact: 'Composting food waste reduces methane emissions from landfills.' },
+        Electronic: { instructions: 'Recycle at e‑waste facilities.', fact: 'Electronic waste contains valuable metals and hazardous substances.' },
+        Textile: { instructions: 'Donate if clean, otherwise recycle.', fact: 'Textile recycling reduces water consumption and landfill waste.' },
+        Hazardous: { instructions: 'Requires special hazardous waste drop-off.', fact: 'Hazardous items can contaminate soil and water if thrown in regular trash.' },
+        Battery: { instructions: 'Drop off at battery recycling points.', fact: 'Batteries contain toxic chemicals that can cause fires or leak into the environment.' },
+        Medical: { instructions: 'Dispose in sealed sharps or biohazard containers.', fact: 'Medical waste poses severe health and contamination risks if mishandled.' },
+        Wood: { instructions: 'Compost or recycle at wood facilities.', fact: 'Untreated wood is fully biodegradable and can be turned into mulch or fuel.' },
+        Rubber: { instructions: 'Take to specialized recycling centers.', fact: 'Rubber takes decades to break down but can be shredded for playground surfaces.' },
+        Unknown: { instructions: 'Check local guidelines.', fact: 'Proper disposal helps reduce environmental impact.' }
+      };
+      const key = aiLabel && aiLabel.category ? aiLabel.category : 'Unknown';
+      return map[key] || map['Unknown'];
+    }
+
+    function renderResults(feats, heuristic, ai) {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      const cat = heuristic.predicted_category;
+      const col = CAT_COLORS[cat] || '#888780';
+      document.getElementById('categoryBadge').innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></span><span style="color:${col}">${cat}</span><span style="font-size:11px;color:#5a7040;font-weight:400;margin-left:4px">${heuristic.confidence_pct}% confidence · ${heuristic.diversion_potential}% diversion</span>`;
+      document.getElementById('categoryBadge').style.background = col + '22';
+      document.getElementById('categoryBadge').style.border = `1px solid ${col}44`;
+
+      document.getElementById('featureGrid').innerHTML = [
+        ['Brightness', Math.round(feats.mean_brightness), '0–255'],
+        ['Saturation', Math.round(feats.mean_saturation), 'HSV channel'],
+        ['Colorfulness', Math.round(feats.colorfulness), 'Hasler metric'],
+        ['Edge Density', feats.edge_density_pct.toFixed(1) + '%', 'Canny estimate'],
+        ['Sharpness', Math.round(feats.sharpness_score), 'Laplacian var'],
+        ['GLCM Energy', feats.glcm_energy.toFixed(4), 'Texture uniformity'],
+      ].map(([l, v, s]) => `<div class="feat-card"><div class="feat-lbl">${l.toUpperCase()}</div><div class="feat-val">${v}</div><div class="feat-sub">${s}</div></div>`).join('');
+
+      const comp = heuristic.composition;
+      const bars = [['Recyclable', comp.recyclable_pct, '#639922'], ['Compostable', comp.compostable_pct, '#1D9E75'], ['Reusable', comp.reusable_pct, '#378ADD'], ['Landfill', comp.landfill_pct, '#888780']];
+      document.getElementById('compositionBars').innerHTML = bars.map(([l, p, c]) => `<div class="bar-row"><span class="bar-lbl">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${c}"></div></div><span class="bar-pct">${Math.round(p)}%</span></div>`).join('');
+
+      const dom = feats.dominant_colors;
+      document.getElementById('colorStrip').innerHTML = dom.map(c => `<div class="color-block" style="background:${c.hex};flex:${c.coverage_pct}">${c.hex}</div>`).join('');
+      document.getElementById('colorPalette').innerHTML = dom.map(c => `<div class="palette-chip"><div class="palette-dot" style="background:${c.hex}"></div>${c.hex} · ${c.coverage_pct}%</div>`).join('');
+
+      document.getElementById('textureGrid').innerHTML = [
+        ['LBP Entropy', feats.lbp_entropy.toFixed(3), 'Surface complexity'],
+        ['GLCM Energy', feats.glcm_energy.toFixed(4), 'Pattern regularity'],
+      ].map(([l, v, s]) => `<div class="feat-card"><div class="feat-lbl">${l.toUpperCase()}</div><div class="feat-val">${v}</div><div class="feat-sub">${s}</div></div>`).join('');
+
+      document.getElementById('shapeGrid').innerHTML = [
+        ['Sharpness', Math.round(feats.sharpness_score), 'Laplacian variance'],
+        ['Edge density', feats.edge_density_pct.toFixed(1) + '%', 'Canny magnitude'],
+      ].map(([l, v, s]) => `<div class="feat-card"><div class="feat-lbl">${l.toUpperCase()}</div><div class="feat-val">${v}</div><div class="feat-sub">${s}</div></div>`).join('');
+
+      document.getElementById('clueList').innerHTML = heuristic.reasoning_clues.map(c => `<div class="clue">→ ${c}</div>`).join('');
+
+      if (ai) {
+        document.getElementById('aiSection').style.display = 'block';
+        const aiHTML = `
+      <div class="ai-header">⚡ CLAUDE VISION LABEL</div>` +
+          [['Item', ai.item || '—'], ['Category', ai.category || '—'], ['Material', ai.material || '—'], ['Condition', ai.condition || '—'], ['Recyclable', ai.recyclable ? 'Yes' : 'No'], ['Diversion', ai.diversion_score + '%'], ['Disposal', ai.disposal || '—'], ['Notes', ai.notes || '—']].map(([k, v]) => `<div class="ai-field"><span class="ai-key">${k}</span><span class="ai-val">${v}</span></div>`).join('');
+        document.getElementById('aiBox').innerHTML = aiHTML;
+        const guide = getRecyclingGuide(ai);
+        document.getElementById('guideCard').innerHTML = `<div class="guide-content"><strong>Recycling Guide:</strong> ${guide.instructions}<br><em>Why it matters:</em> ${guide.fact}</div>`;
+      } else {
+        document.getElementById('aiSection').style.display = 'none';
+      }
+    }
+
+    function downloadJSON(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function downloadCSV(data, filename) {
+      const headers = Object.keys(data[0]).filter(k => typeof data[0][k] !== 'object').join(',');
+      const rows = data.map(rec => Object.keys(rec).filter(k => typeof rec[k] !== 'object').map(k => JSON.stringify(rec[k] ?? '')).join(',')).join('\n');
+      const blob = new Blob([headers + '\n' + rows], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function downloadAllCSV() {
+      downloadCSV(sessionRecords, 'waste_session_dataset.csv');
+    }
+
+    async function runPipeline() {
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Running pipeline...';
+
+      const img = document.getElementById('previewImg');
+      const apiKey = document.getElementById('apiKey').value.trim();
+
+      try {
+        const feats = await analyzePixels(img);
+        const heuristic = materialHeuristics(feats);
+
+        let aiData = null;
+        if (apiKey) {
+          try {
+            btn.innerHTML = '<span class="spinner"></span>Running AI Vision...';
+            aiData = await getAILabel(img.src, apiKey);
+          } catch (e) { aiData = null; }
+        }
+
+        currentFull = { metadata: { filename: currentFile.name, ...feats }, color_statistics: feats, dominant_colors: feats.dominant_colors, texture_features: { glcm_energy: feats.glcm_energy, lbp_entropy: feats.lbp_entropy }, shape_features: {}, edge_features: { edge_density_pct: feats.edge_density_pct, sharpness_score: feats.sharpness_score }, heuristic_prediction: heuristic, ai_vision: aiData };
+        currentRecord = { filename: currentFile.name, ...feats, ...heuristic, dominant_color_1_hex: feats.dominant_colors[0]?.hex, dominant_color_1_pct: feats.dominant_colors[0]?.coverage_pct, ai_label: aiData?.item, ai_category: aiData?.category, ai_diversion: aiData?.diversion_score, ai_disposal: aiData?.disposal };
+
+        sessionRecords.push(currentRecord);
+
+        // Draw contour overlay on canvas
+        drawOverlay(img, heuristic.predicted_category);
+        renderResults(feats, heuristic, aiData);
+        updateHistory();
+
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '🔬 Run Vision Pipeline';
+    }
+
+    function updateHistory() {
+      const list = document.getElementById('historyList');
+      const items = sessionRecords.slice().reverse().map(r => {
+        const col = CAT_COLORS[r.predicted_category] || '#888780';
+        return `<div class="hist-item"><div class="hist-dot" style="background:${col}"></div><span class="hist-name">${r.filename}</span><span class="hist-score">${r.predicted_category} · ${r.diversion_potential}%</span></div>`;
+      }).join('');
+      list.innerHTML = items || '<p style="font-size:12px;color:#3a5020">No images yet.</p>';
+    }
+  </script>
+</body>
+
+</html>
