@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WasteWise Vision — AI-Powered Waste Classification</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-icon">🗑️</div>
+      <h1>WasteWise Vision</h1>
+      <span class="tag">AI PIPELINE</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 11px; color: var(--text-dim); font-weight: 600;">BACKEND STATUS</span>
+      <div class="health-dot" id="healthDot"></div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <div class="layout">
+      <!-- LEFT: INPUT -->
+      <div class="sidebar">
+        <div class="panel">
+          <div class="sec">IMAGE CAPTURE</div>
+          
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+            <div class="dz-icon">📸</div>
+            <div class="dz-text">Drop waste image or browse</div>
+            <div class="dz-hint">High-res JPG or PNG preferred</div>
+          </div>
+
+          <button class="btn btn-secondary" style="margin-bottom: 12px;" onclick="startCamera()">
+            📷 ACCESS CAMERA
+          </button>
+
+          <div id="cameraWrap">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <button class="btn btn-main" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width: auto; padding: 10px 24px;" onclick="captureImage()">
+              CAPTURE PHOTO
+            </button>
+            <button class="btn" style="position:absolute; top:10px; right:10px; width: 32px; height: 32px; padding: 0; background:rgba(0,0,0,0.6); color:#fff; border-radius:50%;" onclick="stopCamera()">
+              ✕
+            </button>
+          </div>
+
+          <div class="preview-wrap" id="previewWrap">
+            <img id="previewImg" src="" alt="Preview">
+            <canvas id="overlayCanvas" class="canvas-overlay"></canvas>
+          </div>
+
+          <div class="sec">AI CONFIGURATION</div>
+          <input class="api-input" id="apiKey" type="password" placeholder="sk-ant-... (Anthropic Key)">
+          
+          <button class="btn btn-main" id="analyzeBtn" onclick="runPipeline()" disabled>
+            🔬 RUN VISION PIPELINE
+          </button>
+
+          <div class="divider"></div>
+          
+          <div class="sec">RECENT HISTORY</div>
+          <div id="historyList">
+            <p style="font-size:12px;color:var(--text-dim)">No images analyzed in this session.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULTS -->
+      <div class="main-content">
+        <div class="panel" style="min-height: 100%;">
+          <div id="emptyState" class="empty-state">
+            <div class="icon">📊</div>
+            <p>Upload or capture an image to begin<br>the multi-modal feature extraction process.</p>
+          </div>
+
+          <div id="resultSection" class="result-section" style="display:none">
+            <div class="sec">PRIMARY CLASSIFICATION</div>
+            <div id="categoryBadge" class="category-badge"></div>
+
+            <div class="sec">MORPHOLOGICAL FEATURES</div>
+            <div class="feature-grid" id="featureGrid"></div>
+
+            <div class="sec">MATERIAL PROBABILITY</div>
+            <div id="compositionBars"></div>
+
+            <div class="sec">CHROMA ANALYSIS (K-MEANS)</div>
+            <div id="colorStrip" class="color-strip"></div>
+            <div id="colorPalette" class="palette-row"></div>
+
+            <div class="sec">HEURISTIC CLUES</div>
+            <div id="clueList" class="clue-list"></div>
+
+            <div id="aiSection" style="display:none">
+              <div class="sec">AI VISION INFERENCE</div>
+              <div class="ai-box" id="aiBox"></div>
+              <div class="guide-card" id="guideCard"></div>
+            </div>
+
+            <div class="divider"></div>
+            
+            <div class="sec">DATASET EXPORT</div>
+            <div class="ds-btn-group">
+              <button class="ds-btn" onclick="downloadJSON()">DOWNLOAD JSON</button>
+              <button class="ds-btn" onclick="downloadCSV()">DOWNLOAD CSV</button>
+            </div>
+            <p class="notice">
+              Pipeline extraction: 59 unique features including GLCM texture, 
+              Sobel edge density, and HSV color moments.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+</body>
+
+</html>
