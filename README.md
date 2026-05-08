@@ -1,6 +1,6 @@
 # WasteWise Vision Pipeline
 
-An AI-powered waste classification system that combines traditional Computer Vision (OpenCV-like) feature extraction with state-of-the-art LLM Vision models (Claude 3.5 Sonnet) to classify and analyze waste materials for circular economy datasets.
+An AI-powered waste classification system that combines traditional Computer Vision (OpenCV-like) feature extraction with state-of-the-art LLM Vision models to classify and analyze waste materials for circular economy datasets.
 
 ## 🚀 Features
 
